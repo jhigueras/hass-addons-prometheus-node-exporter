@@ -1,24 +1,24 @@
-name: Prometheus Node Exporter
-version: 2025.11.2
-slug: racksync-node-exporter
-description: Expose hardware and OS metrics for Prometheus monitoring. Collects system statistics like CPU, memory, disk, and network usage from your Home Assistant host.
-# Updated with improved security, configurable collectors, and monorepo integration
-# Enhanced with comprehensive feature support and automated deployment
-url: https://github.com/racksync/hass-addons-suite/tree/main/node-exporter
+name: Hardened Node Exporter
+version: 2026.1.0
+slug: hardened-node-exporter
+description: >-
+  Exposes HAOS host health metrics for Prometheus. Hardened fork of the RACKSYNC
+  community add-on. Requires Basic Auth. Does not expose Home Assistant, Supervisor,
+  Auth, or Docker APIs. Intended for internal LAN scraping only — never expose
+  through Caddy, WAN, or public DNS.
+url: https://github.com/jhigueras/hass-addons-prometheus-node-exporter
 arch:
   - amd64
   - aarch64
   - armv7
 init: false
-webui: '[PROTO:enable_tls]://[HOST]:[PORT:9100]/metrics'
 ports:
   9100/tcp: 9100
 ports_description:
-  9100/tcp: Prometheus metrics endpoint (requires authentication if enabled)
+  9100/tcp: Prometheus metrics endpoint (Basic Auth required)
 map:
-  - 'config:rw'
-  - 'ssl:ro'
-  - 'share:ro'
+  - addon_config:rw
+  - ssl:ro
 startup: services
 boot: auto
 host_network: true
@@ -29,20 +29,16 @@ advanced: true
 stage: stable
 hassio_api: false
 homeassistant_api: false
-auth_api: true
+auth_api: false
 docker_api: false
 ingress: false
-ingress_port: 0
-panel_title: Prometheus Node Exporter
-panel_icon: mdi:chart-line
 options:
-  enable_basic_auth: false
-  basic_auth_user: ""
-  basic_auth_pass: ""
+  enable_basic_auth: true
+  basic_auth_user: "prometheus"
+  basic_auth_bcrypt_hash: ""
   enable_tls: false
   cert_file: ""
   cert_key: ""
-  cmdline_extra_args: ""
   log_level: "info"
   collectors:
     cpu: true
@@ -55,17 +51,13 @@ options:
     time: true
     wifi: false
     hwmon: true
-  custom_collectors: []
-  ignore_mount_points: []
-  ignore_network_devices: []
 schema:
   enable_basic_auth: bool
-  basic_auth_user: str?
-  basic_auth_pass: str?
+  basic_auth_user: str
+  basic_auth_bcrypt_hash: str
   enable_tls: bool
   cert_file: str?
   cert_key: str?
-  cmdline_extra_args: str?
   log_level: list(trace|debug|info|warn|error)?
   collectors:
     cpu: bool?
@@ -78,6 +70,3 @@ schema:
     time: bool?
     wifi: bool?
     hwmon: bool?
-  custom_collectors: list?
-  ignore_mount_points: list?
-  ignore_network_devices: list?

@@ -1,16 +1,13 @@
 #!/usr/bin/env bashio
 # ==============================================================================
-# Home Assistant Community Add-on: Prometheus Node Exporter
-# Runs the Prometheus Node Exporter
-# ==============================================================================
+# Hardened Node Exporter add-on — entrypoint
 #
-# WHAT IS THIS FILE?!
-#
-# The Prometheus Node Exporter add-on runs in the host PID namespace, therefore it cannot
-# use the regular S6-Overlay; hence this add-on uses a "old school" script
-# to run; with a couple of "hacks" to make it work.
+# Runs in the host PID namespace; S6-Overlay cannot be used here.
 # ==============================================================================
-/etc/cont-init.d/node_exporter.sh
 
-# Start Prometheus Node Exporter
+if ! /etc/cont-init.d/node_exporter.sh; then
+    bashio::log.fatal "Initialization failed. Refusing to start node_exporter."
+    exit 1
+fi
+
 exec /etc/services.d/node_exporter/run

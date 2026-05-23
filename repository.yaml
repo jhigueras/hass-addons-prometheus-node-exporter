@@ -1,6 +1,4 @@
-# https://developers.home-assistant.io/docs/add-ons/repository#repository-configuration
-# This is a source repository that automatically syncs to the production add-ons suite
-name: "RACKSYNC - Prometheus Node Exporter (Source)"
-url: 'https://github.com/racksync/hass-addons-prometheus-node-exporter'
-maintainer: "RACKSYNC CO., LTD. <devops@racksync.com>"
-description: "Source repository for Prometheus Node Exporter add-on that automatically syncs to racksync/hass-addons-suite"
+name: "jhigueras - Hardened Node Exporter"
+url: 'https://github.com/jhigueras/hass-addons-prometheus-node-exporter'
+maintainer: "jhigueras"
+description: "Hardened fork of the RACKSYNC Prometheus Node Exporter add-on for HAOS. Security-first, Basic Auth mandatory, no Supervisor/Docker/HA API access."

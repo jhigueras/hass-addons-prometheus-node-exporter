@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    paths:
+      - node-exporter/**
+      - tests/**
+      - .github/workflows/ci.yaml
+  pull_request:
+    paths:
+      - node-exporter/**
+      - tests/**
+      - .github/workflows/ci.yaml
+
+jobs:
+  shellcheck:
+    name: ShellCheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run ShellCheck
+        uses: ludeeus/action-shellcheck@master
+        with:
+          scandir: ./node-exporter/rootfs
+          severity: warning
+          additional_files: ""
+
+  hadolint:
+    name: Hadolint (Dockerfile)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: node-exporter/Dockerfile
+
+  yaml-lint:
+    name: YAML validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate YAML files
+        run: |
+          python3 -c "import yaml; yaml.safe_load(open('node-exporter/config.yaml'))"        && echo "config.yaml OK"
+          python3 -c "import yaml; yaml.safe_load(open('node-exporter/build.yaml'))"         && echo "build.yaml OK"
+          python3 -c "import yaml; yaml.safe_load(open('node-exporter/translations/en.yaml'))" && echo "translations/en.yaml OK"
+          python3 -c "import yaml; yaml.safe_load(open('repository.yaml'))"                  && echo "repository.yaml OK"
+
+  unit-tests:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run init script tests (auth, bcrypt, TLS, web config)
+        run: bash tests/test_init.sh
+      - name: Run collector flag tests
+        run: bash tests/test_collectors.sh

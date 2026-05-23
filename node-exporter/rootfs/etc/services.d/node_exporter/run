@@ -1,9 +1,32 @@
 #!/usr/bin/env bashio
 # ==============================================================================
-# Home Assistant Community Add-on: Prometheus Node Exporter
-# Runs the Prometheus Node Exporter
+# Hardened Node Exporter add-on — service run
 # ==============================================================================
-bashio::log.info "Starting Prometheus Node Exporter..."
+# WEB_CONFIG_FILE can be overridden in tests.
+WEB_CONFIG_FILE="${WEB_CONFIG_FILE:-/addon_config/node_exporter_web.yml}"
 
-# Run Prometheus
-exec /usr/local/bin/node_exporter --web.config.file=/config/prometheus_node_exporter/node_exporter_web.yml $(bashio::config 'cmdline_extra_args' '')
+bashio::log.info "Starting Prometheus Node Exporter as prometheus:prometheus..."
+
+# Build explicit collector flags. --collector.disable-defaults ensures only
+# whitelisted collectors run regardless of upstream default changes.
+COLLECTORS="--collector.disable-defaults"
+
+bashio::config.true 'collectors.cpu'        && COLLECTORS="${COLLECTORS} --collector.cpu"
+bashio::config.true 'collectors.meminfo'    && COLLECTORS="${COLLECTORS} --collector.meminfo"
+bashio::config.true 'collectors.loadavg'    && COLLECTORS="${COLLECTORS} --collector.loadavg"
+bashio::config.true 'collectors.time'       && COLLECTORS="${COLLECTORS} --collector.time"
+bashio::config.true 'collectors.filesystem' && COLLECTORS="${COLLECTORS} --collector.filesystem"
+bashio::config.true 'collectors.diskstats'  && COLLECTORS="${COLLECTORS} --collector.diskstats"
+bashio::config.true 'collectors.netdev'     && COLLECTORS="${COLLECTORS} --collector.netdev"
+bashio::config.true 'collectors.netstat'    && COLLECTORS="${COLLECTORS} --collector.netstat"
+bashio::config.true 'collectors.hwmon'      && COLLECTORS="${COLLECTORS} --collector.hwmon"
+bashio::config.true 'collectors.wifi'       && COLLECTORS="${COLLECTORS} --collector.wifi"
+
+bashio::log.info "Active collectors: ${COLLECTORS}"
+
+# shellcheck disable=SC2086
+exec su-exec prometheus:prometheus /usr/local/bin/node_exporter \
+    --web.config.file="${WEB_CONFIG_FILE}" \
+    --collector.filesystem.mount-points-exclude='^/(dev|proc|sys|run|var/lib/docker/.+|var/lib/kubelet/.+)($|/)' \
+    --collector.netdev.device-exclude='^(veth.*|docker.*|br-.*|lo)$' \
+    ${COLLECTORS}
