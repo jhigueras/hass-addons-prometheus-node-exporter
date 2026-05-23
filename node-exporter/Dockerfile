@@ -1,5 +1,5 @@
-# hadolint ignore=DL3006
 ARG BUILD_FROM
+# hadolint ignore=DL3006
 FROM $BUILD_FROM
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -10,6 +10,7 @@ ARG \
 
 COPY rootfs /
 
+# hadolint ignore=DL3018
 RUN \
     apk add --no-cache --update tar su-exec \
     && ARCH="${BUILD_ARCH}" \
@@ -19,9 +20,8 @@ RUN \
     && curl -J -L -o /tmp/sha256sums.txt \
        "https://github.com/prometheus/node_exporter/releases/download/v${NODE_EXPORTER_VERSION}/sha256sums.txt" \
     && grep "node_exporter-${NODE_EXPORTER_VERSION}.linux-${ARCH}.tar.gz" /tmp/sha256sums.txt | sha256sum -c - \
-    && cd /tmp \
-    && tar -xzvf node_exporter.tar.gz --strip-components=1 \
-    && mv node_exporter /usr/local/bin/ \
+    && tar -xzvf /tmp/node_exporter.tar.gz --strip-components=1 -C /tmp \
+    && mv /tmp/node_exporter /usr/local/bin/ \
     && adduser -s /bin/false -D -H prometheus \
     && chown -R prometheus:prometheus /usr/local/bin/node_exporter \
     && rm -rf /tmp/node_exporter* /tmp/sha256sums.txt LICENSE NOTICE
