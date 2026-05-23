@@ -1,188 +1,122 @@
-# Prometheus Node Exporter for Home Assistant
+# Hardened Node Exporter — HAOS Add-on
 
-**Source Repository** - This repository contains the source code for the Prometheus Node Exporter add-on that automatically syncs to the [Home Assistant Add-ons Suite](https://github.com/racksync/hass-addons-suite/tree/main/node-exporter).
+A hardened fork of [racksync/hass-addons-prometheus-node-exporter][upstream].
 
-## Overview
+Exposes HAOS host health metrics (CPU, memory, disk, network, hardware sensors)
+on port `9100/tcp` for scraping by a Prometheus-compatible monitoring stack.
 
-This add-on exposes hardware and OS metrics for Prometheus monitoring. It collects comprehensive system statistics like CPU, memory, disk, and network usage from your Home Assistant host and makes them available through the Prometheus metrics format.
+## What this fork changes
 
-## Features
+| Area | Upstream | This fork |
+|---|---|---|
+| node-exporter version | 1.8.2 | 1.11.1 |
+| Binary integrity | No checksum | SHA256 verified against upstream release |
+| Basic Auth | Optional, off by default | **Mandatory** — add-on refuses to start without it |
+| Auth credential field | `basic_auth_pass` (plaintext) | `basic_auth_bcrypt_hash` (bcrypt only) |
+| Shell injection guard | None | Username allowlist + YAML single-quoting |
+| Token write to disk | `SUPERVISOR_TOKEN` written to `/run/` | Removed |
+| Extra CLI args | `cmdline_extra_args` (shell injection risk) | Removed |
+| HA API surface | auth\_api, hassio\_api enabled | All disabled |
+| Collector config | `ignore_mount_points`, `ignore_network_devices` lists | Removed; sensible excludes hardcoded |
+| CI | Publish-only sync | shellcheck + hadolint + yaml-lint + unit tests |
 
-- **Hardware Metrics**: CPU, memory, disk usage, and temperature monitoring
-- **Network Statistics**: Real-time network interface monitoring
-- **Security-First**: AppArmor protection, minimal permissions, principle of least privilege
-- **Configurable**: Enable/disable specific collectors based on your needs
-- **Prometheus Compatible**: Standard metrics endpoint for integration with Prometheus/Grafana
-- **Multi-Architecture**: Support for amd64, aarch64, and armv7 systems
+## Security posture
 
-## Architecture
+This add-on requires `host_pid: true` and `host_network: true` — it runs in
+**non-protected mode**. Read [SECURITY.md][security] before installing.
 
-This repository follows a **source-to-monorepo** architecture:
+Key controls in this fork: Basic Auth mandatory, bcrypt-only hashes, no HA API
+access, no SUPERVISOR_TOKEN on disk, SHA256 binary verification.
 
-- **Source**: Here (`node-exporter/` directory) - Development and updates
-- **Target**: [Home Assistant Add-ons Suite](https://github.com/racksync/hass-addons-suite) - Distribution to users
-
-All changes made to the `node-exporter/` directory are automatically validated and synced to the monorepo via GitHub Actions.
+Required operator controls: firewall blocking port `9100/tcp` from IoT/guest VLANs;
+do not expose through a reverse proxy or WAN.
 
 ## Installation
 
-This add-on is available through the **Home Assistant Add-ons Suite** repository:
-
-1. **Add Repository to Home Assistant**:
+1. Add this repository to your Home Assistant add-on store:
    ```
-   https://github.com/racksync/hass-addons-suite
+   https://github.com/jhigueras/hass-addons-prometheus-node-exporter
    ```
-   Go to **Settings** → **Add-ons** → **Add-on Store** → ⋮ → **Add Repository**
+   Go to **Settings** → **Add-ons** → **Add-on Store** → ⋮ → **Repositories**
 
-2. **Install Prometheus Node Exporter**:
-   - Find "Prometheus Node Exporter" in the store
-   - Click **INSTALL**
-   - Configure as needed (see Configuration section)
-   - **START** the add-on
+2. Install **Hardened Node Exporter**.
 
-## Configuration
+3. Generate a bcrypt hash for your scrape password:
+   ```
+   htpasswd -nBC 12 '' | tr -d ':\n'
+   ```
 
-### Basic Setup
+4. Configure the add-on:
+   ```yaml
+   enable_basic_auth: true
+   basic_auth_user: "prometheus"
+   basic_auth_bcrypt_hash: "$2b$12$..."   # output of htpasswd above
+   enable_tls: false
+   ```
 
-```yaml
-# Default configuration - works out of the box
-log_level: "info"  # trace|debug|info|warn|error
-enable_basic_auth: false
-enable_tls: false
+5. Start the add-on.
+
+6. Verify: `curl -u prometheus:<plaintext-password> http://<HA_IP>:9100/metrics | head`
+
+## Configuration reference
+
+| Option | Required | Default | Description |
+|---|---|---|---|
+| `enable_basic_auth` | yes | `true` | Must be `true`. Add-on exits if false. |
+| `basic_auth_user` | yes | `prometheus` | Username. Letters, digits, `-`, `_` only. |
+| `basic_auth_bcrypt_hash` | yes | — | bcrypt hash starting with `$2a$`, `$2b$`, or `$2y$`. |
+| `enable_tls` | no | `false` | Enable HTTPS. Requires `cert_file` and `cert_key`. |
+| `cert_file` | conditional | — | Path under `/ssl/`, e.g. `/ssl/fullchain.pem`. |
+| `cert_key` | conditional | — | Path under `/ssl/`, e.g. `/ssl/privkey.pem`. |
+| `log_level` | no | `info` | `trace`, `debug`, `info`, `warn`, or `error`. |
+| `collectors.*` | no | see below | Enable/disable individual collectors. |
+
+### Default collectors
+
+| Collector | Default | Key metrics |
+|---|---|---|
+| cpu | ✅ | `node_cpu_seconds_total` |
+| meminfo | ✅ | `node_memory_*` |
+| loadavg | ✅ | `node_load*` |
+| time | ✅ | `node_time_seconds` |
+| filesystem | ✅ | `node_filesystem_*` |
+| diskstats | ✅ | `node_disk_*` |
+| netdev | ✅ | `node_network_*` |
+| netstat | ✅ | `node_netstat_*` |
+| hwmon | ✅ | `node_hwmon_temp_celsius` |
+| wifi | ❌ | disabled |
+
+Virtual interfaces (`veth*`, `docker*`, `br-*`, `lo`) and container/system mounts
+are excluded regardless of collector settings.
+
+## Prometheus scrape configuration (NixOS example)
+
+```nix
+{
+  job_name = "node-homeassistant";
+  static_configs = [{
+    targets = [ "<HA_IP>:9100" ];
+    labels = { instance = "homeassistant"; };
+  }];
+  basic_auth = {
+    username = "prometheus";
+    password_file = config.sops.secrets."monitoring/HA_NODE_EXPORTER_PASS".path;
+  };
+  scrape_interval = "30s";
+}
 ```
 
-### Advanced Configuration
-
-```yaml
-# Enable/disable specific collectors
-collectors:
-  cpu: true          # CPU usage and utilization
-  meminfo: true      # Memory statistics
-  diskstats: true    # Disk I/O statistics
-  netdev: true       # Network interface stats
-  netstat: true      # Network connection stats
-  filesystem: true   # Filesystem usage
-  loadavg: true      # System load average
-  time: true         # Current time metrics
-  wifi: false        # WiFi statistics (if applicable)
-  hwmon: true        # Hardware monitoring (temperature/fans)
-
-# Ignore specific mount points or network devices
-ignore_mount_points:
-  - "/tmp"
-  - "/run"
-
-ignore_network_devices:
-  - "docker0"
-  - "veth*"
-
-# Custom command line arguments for node_exporter
-cmdline_extra_args: "--collector.disable-defaults --collector.cpu"
-```
-
-### Security Options
-
-```yaml
-# Enable HTTP Basic Authentication
-enable_basic_auth: true
-basic_auth_user: "your_username"
-basic_auth_pass: "your_bcrypt_hash"
-
-# Enable TLS/HTTPS
-enable_tls: true
-cert_file: "/ssl/fullchain.pem"
-cert_key: "/ssl/privkey.pem"
-```
-
-## Metrics Endpoint
-
-Once running, the add-on exposes metrics at:
-
-- **HTTP**: `http://your-home-assistant:9100/metrics`
-- **HTTPS** (if TLS enabled): `https://your-home-assistant:9100/metrics`
-- **With Auth**: Include Basic Auth headers if enabled
-
-### Example Prometheus Configuration
-
-```yaml
-scrape_configs:
-  - job_name: 'homeassistant-node-exporter'
-    static_configs:
-      - targets: ['your-home-assistant:9100']
-    metrics_path: '/metrics'
-    # Add authentication if enabled
-    basic_auth:
-      username: 'your_username'
-      password: 'your_password'
-```
-
-## Development
-
-### Source Code Structure
-
-```
-node-exporter/
-├── config.yaml          # Add-on configuration and schema
-├── build.yaml           # Build configuration
-├── Dockerfile           # Container image definition
-├── CHANGELOG.md         # Version history and release notes
-├── README.md           # This file
-├── icon.png           # Add-on icon
-├── logo.png           # Add-on logo
-├── rootfs/            # Container filesystem
-│   ├── etc/
-│   │   ├── cont-init.d/
-│   │   └── services.d/
-│   └── run.sh
-└── translations/
-    └── en.yaml        # English translations
-```
-
-### Making Changes
-
-1. Edit files in the `node-exporter/` directory
-2. Test configuration changes locally
-3. Commit and push to this repository
-4. GitHub Actions will automatically validate and sync to the monorepo
-
-### Automated Sync Process
-
-- **Validation**: Configuration files are validated before sync
-- **Version Management**: Automatic tagging with version information
-- **Monorepo Update**: Files are synced to `racksync/hass-addons-suite`
-- **Release Creation**: Automatic release tag creation
-
-## Security Considerations
-
-- **AppArmor**: Enabled for container isolation
-- **Minimal Permissions**: Only requests necessary system access
-- **Principle of Least Privilege**: Reduces attack surface
-- **Authentication**: Optional Basic Auth and TLS support
-- **Network Access**: Host network access required for system metrics
-
-## Support & Contributing
-
-- **Issues**: [GitHub Issues](https://github.com/racksync/hass-addons-suite/issues) in the monorepo
-- **Discussions**: Community support and feature requests
-- **Contributions**: Pull requests welcome in this source repository
+The Prometheus scraper uses the **plaintext password**. The add-on stores and
+validates only the **bcrypt hash**. These are two separate values for the same
+credential.
 
 ## Version
 
-**Current Version**: `2025.11.1`
-**Release**: [View in Add-ons Suite](https://github.com/racksync/hass-addons-suite/releases/tag/node-exporter-v2025.11.1)
+**Current version**: `2026.1.0` — node-exporter `1.11.1`
 
-## License
+## Upstream
 
-This add-on follows the same licensing as the [Home Assistant Add-ons Suite](https://github.com/racksync/hass-addons-suite).
+Forked from [racksync/hass-addons-prometheus-node-exporter][upstream].
 
----
-
-**Maintained by**: [RACKSYNC CO., LTD.](https://racksync.com) - ALL ABOUT AUTOMATION
-**Location**: Bangkok, Thailand
-**Email**: devops@racksync.com
-**Website**: [www.racksync.com](https://www.racksync.com)
-**X (Twitter)**: [@racksync](https://twitter.com/racksync)
-**Facebook**: [racksync](https://www.facebook.com/racksync)
-
-
-
+[upstream]: https://github.com/racksync/hass-addons-prometheus-node-exporter
+[security]: https://github.com/jhigueras/hass-addons-prometheus-node-exporter/blob/main/SECURITY.md
