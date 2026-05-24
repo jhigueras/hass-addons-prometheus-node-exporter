@@ -1,5 +1,24 @@
 ### CHANGELOG
 
+## 2026.1.2
+
+### Changed
+
+- Dropped deprecated `advanced` config field (ignored by supervisor)
+- Dropped `armv7` arch (deprecated by HA; supported arches: amd64, aarch64)
+
+---
+
+## 2026.1.1
+
+### Fixed
+
+- SHA256 verification failed at build time: tarball was saved as `node_exporter.tar.gz`
+  but `sha256sum -c` looked up the original filename from the checksums file.
+  Fixed by downloading with the canonical filename and verifying via full path.
+
+---
+
 ## 2026.1.0
 
 ### Security hardening (fork baseline)
