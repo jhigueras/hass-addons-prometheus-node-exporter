@@ -1,11 +1,12 @@
+---
 name: Hardened Node Exporter
-version: 2026.1.0
+version: 2026.1.1
 slug: hardened-node-exporter
 description: >-
   Exposes HAOS host health metrics for Prometheus. Hardened fork of the RACKSYNC
-  community add-on. Requires Basic Auth. Does not expose Home Assistant, Supervisor,
-  Auth, or Docker APIs. Intended for internal LAN scraping only — never expose
-  through Caddy, WAN, or public DNS.
+  community add-on. Requires Basic Auth. Does not expose Home Assistant,
+  Supervisor, Auth, or Docker APIs. Intended for internal LAN scraping only
+  — never expose through Caddy, WAN, or public DNS.
 url: https://github.com/jhigueras/hass-addons-prometheus-node-exporter
 arch:
   - amd64
