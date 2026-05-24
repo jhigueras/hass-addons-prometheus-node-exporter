@@ -2,10 +2,11 @@
 
 ## 2026.1.5
 
-### Added
+### Fixed
 
-- `boottime` collector (opt-in, default enabled): exposes `node_boot_time_seconds`
-  for Uptime panels in Grafana/Prometheus dashboards.
+- Removed erroneous `boottime` collector flag: `--collector.boottime` is not
+  supported by node_exporter 1.11.1 on Linux. `node_boot_time_seconds` is
+  already exposed by the `time` collector (enabled by default).
 
 ---
 

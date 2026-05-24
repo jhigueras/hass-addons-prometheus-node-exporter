@@ -50,7 +50,6 @@ options:
     time: true
     wifi: false
     hwmon: true
-    boottime: true
 schema:
   enable_basic_auth: bool
   basic_auth_user: str
@@ -70,4 +69,3 @@ schema:
     time: bool?
     wifi: bool?
     hwmon: bool?
-    boottime: bool?
