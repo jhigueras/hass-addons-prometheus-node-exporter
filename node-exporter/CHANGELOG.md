@@ -1,5 +1,15 @@
 ### CHANGELOG
 
+## 2026.1.6
+
+### Added
+
+- `stat` collector (default enabled): exposes `node_boot_time_seconds` (needed
+  for Uptime panels), `node_context_switches_total`, `node_intr_total`,
+  `node_forks_total`, `node_procs_running`, and `node_procs_blocked`.
+
+---
+
 ## 2026.1.5
 
 ### Fixed

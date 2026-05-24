@@ -63,6 +63,7 @@ credential.
 | netdev | ✅ | `node_network_*` |
 | netstat | ✅ | `node_netstat_*` |
 | hwmon | ✅ | `node_hwmon_temp_celsius` (RPi CPU temp) |
+| stat | ✅ | `node_boot_time_seconds`, `node_context_switches_total`, `node_intr_total` |
 | wifi | ❌ | disabled |
 
 Virtual interfaces (`veth*`, `docker*`, `br-*`, `lo`) and container/system

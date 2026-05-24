@@ -21,6 +21,7 @@ bashio::config.true 'collectors.netdev'     && COLLECTORS="${COLLECTORS} --colle
 bashio::config.true 'collectors.netstat'    && COLLECTORS="${COLLECTORS} --collector.netstat"
 bashio::config.true 'collectors.hwmon'      && COLLECTORS="${COLLECTORS} --collector.hwmon"
 bashio::config.true 'collectors.wifi'       && COLLECTORS="${COLLECTORS} --collector.wifi"
+bashio::config.true 'collectors.stat'       && COLLECTORS="${COLLECTORS} --collector.stat"
 
 bashio::log.info "Active collectors: ${COLLECTORS}"
 

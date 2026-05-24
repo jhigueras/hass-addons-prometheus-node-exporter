@@ -86,6 +86,8 @@ run_test "hwmon enabled when true" "--collector.hwmon" "" "collectors.hwmon=true
 run_test "hwmon absent when false" "" "--collector.hwmon" "collectors.hwmon=false"
 run_test "wifi absent when false"  "" "--collector.wifi" "collectors.wifi=false"
 run_test "wifi present when true"  "--collector.wifi" "" "collectors.wifi=true"
+run_test "stat enabled when true"  "--collector.stat" "" "collectors.stat=true"
+run_test "stat absent when false"  "" "--collector.stat"  "collectors.stat=false"
 
 run_test "mount-points-exclude always present" \
     "--collector.filesystem.mount-points-exclude" "" "collectors.filesystem=true"
