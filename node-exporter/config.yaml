@@ -1,5 +1,5 @@
 ---
-name: Hardened Node Exporter
+name: Prometheus Node Exporter
 version: 2026.1.6
 slug: hardened-node-exporter
 description: >-

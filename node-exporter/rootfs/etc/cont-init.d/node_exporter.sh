@@ -1,6 +1,6 @@
 #!/usr/bin/env bashio
 # ==============================================================================
-# Hardened Node Exporter add-on — configuration phase
+# Prometheus Node Exporter add-on — configuration phase
 # ==============================================================================
 bashio::require.unprotected
 

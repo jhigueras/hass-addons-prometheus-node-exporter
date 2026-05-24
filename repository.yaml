@@ -1,5 +1,5 @@
 ---
-name: "jhigueras - Hardened Node Exporter"
+name: "jhigueras - Prometheus Node Exporter"
 url: "https://github.com/jhigueras/hass-addons-prometheus-node-exporter"
 maintainer: "jhigueras"
 description: >-

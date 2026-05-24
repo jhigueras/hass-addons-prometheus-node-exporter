@@ -1,4 +1,4 @@
-# Hardened Node Exporter
+# Prometheus Node Exporter
 
 Exposes Home Assistant OS host metrics (CPU, memory, disk, network, hardware
 sensors) on port `9100/tcp` for scraping by Prometheus.

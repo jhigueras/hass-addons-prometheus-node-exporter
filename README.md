@@ -1,4 +1,4 @@
-# Hardened Node Exporter — HAOS Add-on
+# Prometheus Node Exporter — HAOS Add-on
 
 A hardened fork of [racksync/hass-addons-prometheus-node-exporter][upstream].
 
@@ -39,7 +39,7 @@ do not expose through a reverse proxy or WAN.
    ```
    Go to **Settings** → **Add-ons** → **Add-on Store** → ⋮ → **Repositories**
 
-2. Install **Hardened Node Exporter**.
+2. Install **Prometheus Node Exporter**.
 
 3. Generate a bcrypt hash for your scrape password:
    ```

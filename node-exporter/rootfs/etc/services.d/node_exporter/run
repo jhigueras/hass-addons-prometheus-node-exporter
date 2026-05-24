@@ -1,6 +1,6 @@
 #!/usr/bin/env bashio
 # ==============================================================================
-# Hardened Node Exporter add-on — service run
+# Prometheus Node Exporter add-on — service run
 # ==============================================================================
 # WEB_CONFIG_FILE can be overridden in tests.
 WEB_CONFIG_FILE="${WEB_CONFIG_FILE:-/addon_config/node_exporter_web.yml}"

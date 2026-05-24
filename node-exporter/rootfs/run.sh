@@ -1,6 +1,6 @@
 #!/usr/bin/env bashio
 # ==============================================================================
-# Hardened Node Exporter add-on — entrypoint
+# Prometheus Node Exporter add-on — entrypoint
 #
 # Runs in the host PID namespace; S6-Overlay cannot be used here.
 # ==============================================================================

@@ -1,9 +1,9 @@
-# Hardened Node Exporter for Home Assistant OS
+# Prometheus Node Exporter for Home Assistant OS
 
 Exposes HAOS host health metrics (CPU, memory, disk, network, hardware sensors)
 for scraping by a Prometheus-compatible monitoring stack.
 
-This is a hardened fork of the [RACKSYNC community add-on][upstream].
+This fork adds mandatory Basic Auth, bcrypt-only credential storage, AppArmor confinement, and a minimal collector set to the [RACKSYNC community add-on][upstream].
 
 ## ⚠ Non-protected mode warning
 
@@ -20,7 +20,7 @@ This add-on requires `host_pid: true` and `host_network: true`. It runs in
 
 1. Add this repository to your Home Assistant add-on store:
    `https://github.com/jhigueras/hass-addons-prometheus-node-exporter`
-2. Install **Hardened Node Exporter**.
+2. Install **Prometheus Node Exporter**.
 3. Generate a bcrypt hash for your scrape password:
    ```
    htpasswd -nBC 12 '' | tr -d ':\n'
