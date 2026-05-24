@@ -97,10 +97,6 @@ See [docs/prometheus-integration.md](docs/prometheus-integration.md) for:
 - Grafana dashboard setup
 - Alert rules (target down, filesystem full, memory pressure, high load, clock drift)
 
-## Version
-
-**Current version**: `2026.1.0` — node-exporter `1.11.1`
-
 ## Upstream
 
 Forked from [racksync/hass-addons-prometheus-node-exporter][upstream].
