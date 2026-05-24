@@ -1,6 +1,6 @@
 ---
 name: Hardened Node Exporter
-version: 2026.1.1
+version: 2026.1.2
 slug: hardened-node-exporter
 description: >-
   Exposes HAOS host health metrics for Prometheus. Hardened fork of the RACKSYNC
@@ -11,7 +11,6 @@ url: https://github.com/jhigueras/hass-addons-prometheus-node-exporter
 arch:
   - amd64
   - aarch64
-  - armv7
 init: false
 ports:
   9100/tcp: 9100
@@ -26,7 +25,6 @@ host_network: true
 apparmor: true
 host_pid: true
 homeassistant: "2023.8.1"
-advanced: true
 stage: stable
 hassio_api: false
 homeassistant_api: false
