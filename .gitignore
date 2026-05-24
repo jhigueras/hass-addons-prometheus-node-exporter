@@ -1,7 +1,7 @@
-docs/
 .DS_Store
 .claude
 .vscode
 specs/
 .specify/
 .mdlrc
+docs/ha-node-exporter-fork-dossier.md

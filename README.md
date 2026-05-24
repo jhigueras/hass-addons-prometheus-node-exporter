@@ -89,26 +89,13 @@ do not expose through a reverse proxy or WAN.
 Virtual interfaces (`veth*`, `docker*`, `br-*`, `lo`) and container/system mounts
 are excluded regardless of collector settings.
 
-## Prometheus scrape configuration (NixOS example)
+## Prometheus integration
 
-```nix
-{
-  job_name = "node-homeassistant";
-  static_configs = [{
-    targets = [ "<HA_IP>:9100" ];
-    labels = { instance = "homeassistant"; };
-  }];
-  basic_auth = {
-    username = "prometheus";
-    password_file = config.sops.secrets."monitoring/HA_NODE_EXPORTER_PASS".path;
-  };
-  scrape_interval = "30s";
-}
-```
-
-The Prometheus scraper uses the **plaintext password**. The add-on stores and
-validates only the **bcrypt hash**. These are two separate values for the same
-credential.
+See [docs/prometheus-integration.md](docs/prometheus-integration.md) for:
+- Scrape configuration examples (YAML and NixOS)
+- SOPS secret management
+- Grafana dashboard setup
+- Alert rules (target down, filesystem full, memory pressure, high load, clock drift)
 
 ## Version
 

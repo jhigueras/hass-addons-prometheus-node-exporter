@@ -23,7 +23,7 @@ jobs:
         with:
           scandir: ./node-exporter/rootfs
           severity: warning
-          additional_files: ""
+          additional_files: "tests/test_init.sh tests/test_collectors.sh tests/mock_bashio.sh"
 
   hadolint:
     name: Hadolint (Dockerfile)

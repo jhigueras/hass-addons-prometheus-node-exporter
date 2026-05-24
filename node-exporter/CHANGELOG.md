@@ -1,5 +1,28 @@
 ### CHANGELOG
 
+## 2026.1.0
+
+### Security hardening (fork baseline)
+
+- Replaced `basic_auth_pass` (plaintext) with `basic_auth_bcrypt_hash`; add-on refuses to start without a valid bcrypt hash
+- Basic Auth is now mandatory — add-on exits on startup if disabled
+- Added username allowlist validation and YAML single-quote escaping to prevent injection
+- Removed `SUPERVISOR_TOKEN` write to `/run/`; no Supervisor token is used at runtime
+- Removed `cmdline_extra_args` option (shell injection risk)
+- Disabled `auth_api` (was enabled upstream)
+- Node Exporter binary now SHA256-verified against upstream release checksums
+- Node Exporter runs as `prometheus:prometheus` via `su-exec` (not root)
+- Switched to `--collector.disable-defaults` with explicit collector whitelist
+- Added `--collector.filesystem.mount-points-exclude` and `--collector.netdev.device-exclude` to drop container/virtual noise
+- Replaced broad `config:rw` mount with `addon_config:rw`; removed `share:ro`
+- Added CI: shellcheck, hadolint, yaml-lint, unit tests (auth/bcrypt/TLS/collector flags)
+
+### Updated
+
+- Node Exporter: 1.8.2 → **1.11.1**
+
+---
+
 ## 2025.11.2
 
 ### Bug Fixes

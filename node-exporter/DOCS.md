@@ -1,181 +1,175 @@
-# Prometheus Node Exporter for Home Assistant
+# Hardened Node Exporter
 
-This add-on exposes hardware and OS metrics for Prometheus monitoring. It collects comprehensive system statistics like CPU, memory, disk, and network usage from your Home Assistant host and makes them available through the Prometheus metrics format.
+Exposes Home Assistant OS host metrics (CPU, memory, disk, network, hardware
+sensors) on port `9100/tcp` for scraping by Prometheus.
 
-## Features
+> **This add-on runs in non-protected mode** (`host_pid: true`,
+> `host_network: true`). Port `9100/tcp` is bound directly on the Home
+> Assistant host network. Read the Security tab before installing.
 
-- **Hardware Metrics**: CPU, memory, disk usage, and temperature monitoring
-- **Network Statistics**: Real-time network interface monitoring
-- **Security-First**: AppArmor protection, minimal permissions, principle of least privilege
-- **Configurable**: Enable/disable specific collectors based on your needs
-- **Prometheus Compatible**: Standard metrics endpoint for integration with Prometheus/Grafana
-- **Multi-Architecture**: Support for amd64, aarch64, and armv7 systems
+---
 
-## Architecture
+## Before you start
 
-This repository follows a source-to-monorepo architecture:
+You need:
 
-- **Source**: Here (node-exporter/ directory) - Development and updates
-- **Target**: [Home Assistant Add-ons Suite](https://github.com/racksync/hass-addons-suite) - Distribution to users
+1. A Prometheus instance on your LAN that will scrape this add-on.
+2. Your router or firewall configured to block port `9100/tcp` from IoT and
+   guest network segments. The add-on cannot enforce this on its own.
+3. A bcrypt hash of a scrape password (instructions below).
 
-All changes made to the node-exporter directory are automatically validated and synced to the monorepo via GitHub Actions.
+---
 
-## Installation
+## Step 1 — Generate a bcrypt hash
 
-This add-on is available through the Home Assistant Add-ons Suite repository:
+On any Linux machine with `apache2-utils` installed:
 
-1. **Add Repository to Home Assistant**:
-   ```
-   https://github.com/racksync/hass-addons-suite
-   ```
-   Go to Settings → Add-ons → Add-on Store → ⋮ → Add Repository
+```bash
+htpasswd -nBC 12 '' | tr -d ':\n'
+```
 
-2. **Install Prometheus Node Exporter**:
-   - Find "Prometheus Node Exporter" in the store
-   - Click **INSTALL**
-   - Configure as needed (see Configuration section)
-   - **START** the add-on
+This prints a hash starting with `$2b$12$...`. Copy it — you will paste it
+into the add-on configuration. **Keep the original plaintext password
+somewhere safe** (your password manager or secrets manager); you will need it
+to configure Prometheus.
 
-## Configuration
+If you do not have `apache2-utils`, install it:
+- Debian/Ubuntu: `sudo apt install apache2-utils`
+- Fedora/RHEL: `sudo dnf install httpd-tools`
+- macOS (Homebrew): `brew install httpd`
 
-### Basic Setup
+---
+
+## Step 2 — Configure the add-on
+
+Open the **Configuration** tab and set:
 
 ```yaml
-# Default configuration - works out of the box
-log_level: "info"  # trace|debug|info|warn|error
-enable_basic_auth: false
+enable_basic_auth: true
+basic_auth_user: "prometheus"
+basic_auth_bcrypt_hash: "$2b$12$..."   # paste your hash here
 enable_tls: false
 ```
 
-### Advanced Configuration
+The add-on **will not start** if `enable_basic_auth` is `false` or if the
+hash field is empty or invalid.
+
+### Optional: TLS
+
+If you have a certificate (e.g. from Let's Encrypt via the Home Assistant SSL
+integration), you can enable TLS:
 
 ```yaml
-# Enable/disable specific collectors
-collectors:
-  cpu: true          # CPU usage and utilization
-  meminfo: true      # Memory statistics
-  diskstats: true    # Disk I/O statistics
-  netdev: true       # Network interface stats
-  netstat: true      # Network connection stats
-  filesystem: true   # Filesystem usage
-  loadavg: true      # System load average
-  time: true         # Current time metrics
-  wifi: false        # WiFi statistics (if applicable)
-  hwmon: true        # Hardware monitoring (temperature/fans)
-
-# Ignore specific mount points or network devices
-ignore_mount_points:
-  - "/tmp"
-  - "/run"
-
-ignore_network_devices:
-  - "docker0"
-  - "veth*"
-
-# Custom command line arguments for node_exporter
-cmdline_extra_args: "--collector.disable-defaults --collector.cpu"
-```
-
-### Security Options
-
-```yaml
-# Enable HTTP Basic Authentication
-enable_basic_auth: true
-basic_auth_user: "your_username"
-basic_auth_pass: "your_bcrypt_hash"
-
-# Enable TLS/HTTPS
 enable_tls: true
 cert_file: "/ssl/fullchain.pem"
 cert_key: "/ssl/privkey.pem"
 ```
 
-## Metrics Endpoint
+Change `cert_file` and `cert_key` to match your actual certificate file names
+under `/ssl/`.
 
-Once running, the add-on exposes metrics at:
+### Optional: collectors
 
-- **HTTP**: `http://your-home-assistant:9100/metrics`
-- **HTTPS** (if TLS enabled): `https://your-home-assistant:9100/metrics`
-- **With Auth**: Include Basic Auth headers if enabled
-
-### Example Prometheus Configuration
+You can disable collectors you do not need. All are enabled by default except
+`wifi`.
 
 ```yaml
-scrape_configs:
-  - job_name: 'homeassistant-node-exporter'
-    static_configs:
-      - targets: ['your-home-assistant:9100']
-    metrics_path: '/metrics'
-    # Add authentication if enabled
-    basic_auth:
-      username: 'your_username'
-      password: 'your_password'
+collectors:
+  cpu: true
+  meminfo: true
+  loadavg: true
+  time: true
+  filesystem: true
+  diskstats: true
+  netdev: true
+  netstat: true
+  hwmon: true       # hardware temperature sensors
+  wifi: false
 ```
-
-## Development
-
-### Source Code Structure
-
-```
-node-exporter/
-├── config.yaml          # Add-on configuration and schema
-├── build.yaml           # Build configuration
-├── Dockerfile           # Container image definition
-├── CHANGELOG.md         # Version history and release notes
-├── README.md           # This file
-├── icon.png           # Add-on icon
-├── logo.png           # Add-on logo
-├── rootfs/            # Container filesystem
-│   ├── etc/
-│   │   ├── cont-init.d/
-│   │   └── services.d/
-│   └── run.sh
-└── translations/
-    └── en.yaml        # English translations
-```
-
-### Making Changes
-
-1. Edit files in the `node-exporter/` directory
-2. Test configuration changes locally
-3. Commit and push to this repository
-4. GitHub Actions will automatically validate and sync to the monorepo
-
-### Automated Sync Process
-
-- **Validation**: Configuration files are validated before sync
-- **Version Management**: Automatic tagging with version information
-- **Monorepo Update**: Files are synced to `racksync/hass-addons-suite`
-- **Release Creation**: Automatic release tag creation
-
-## Security Considerations
-
-- **AppArmor**: Enabled for container isolation
-- **Minimal Permissions**: Only requests necessary system access
-- **Principle of Least Privilege**: Reduces attack surface
-- **Authentication**: Optional Basic Auth and TLS support
-- **Network Access**: Host network access required for system metrics
-
-## Support & Contributing
-
-- **Issues**: [GitHub Issues](https://github.com/racksync/hass-addons-suite/issues) in the monorepo
-- **Discussions**: Community support and feature requests
-- **Contributions**: Pull requests welcome in this source repository
-
-## Version
-
-**Current Version**: `2025.11.1`
-**Release**: [View in Add-ons Suite](https://github.com/racksync/hass-addons-suite/releases/tag/node-exporter-v2025.11.1)
-
-## License
-
-This add-on follows the same licensing as the [Home Assistant Add-ons Suite](https://github.com/racksync/hass-addons-suite).
 
 ---
 
-**Maintained by**: [RACKSYNC CO., LTD.](https://racksync.com) - ALL ABOUT AUTOMATION
-**Location**: Bangkok, Thailand
-**Email**: devops@racksync.com
-**Website**: [www.racksync.com](https://www.racksync.com)
-**X (Twitter)**: [@racksync](https://twitter.com/racksync)
-**Facebook**: [racksync](https://www.facebook.com/racksync)
+## Step 3 — Start the add-on
+
+Click **Start**. Check the **Log** tab to confirm startup succeeded. You should
+see a line like:
+
+```
+Starting Prometheus Node Exporter as prometheus:prometheus...
+```
+
+---
+
+## Step 4 — Verify
+
+From any machine on the same LAN:
+
+```bash
+# Should return 401 (endpoint is protected)
+curl -s -o /dev/null -w "%{http_code}" http://<HA_IP>:9100/metrics
+
+# Should return metrics (replace with your actual username and password)
+curl -u prometheus:<plaintext-password> http://<HA_IP>:9100/metrics | head
+```
+
+---
+
+## Step 5 — Configure Prometheus
+
+Add a scrape job to your Prometheus configuration:
+
+```yaml
+scrape_configs:
+  - job_name: "node-homeassistant"
+    scrape_interval: 30s
+    static_configs:
+      - targets: ["<HA_IP>:9100"]
+        labels:
+          instance: "homeassistant"
+    basic_auth:
+      username: "prometheus"
+      password: "<plaintext-password>"   # or use password_file with a secrets manager
+```
+
+**Do not commit the plaintext password to version control.** Use
+`password_file` pointing to a file managed by your secrets manager (SOPS,
+Vault, etc.).
+
+---
+
+## Metrics exposed
+
+| Collector | Key metrics |
+|---|---|
+| cpu | `node_cpu_seconds_total` |
+| meminfo | `node_memory_*` |
+| loadavg | `node_load*` |
+| time | `node_time_seconds` |
+| filesystem | `node_filesystem_*` |
+| diskstats | `node_disk_*` |
+| netdev | `node_network_*` |
+| netstat | `node_netstat_*` |
+| hwmon | `node_hwmon_temp_celsius` |
+
+Virtual interfaces (`veth*`, `docker*`, `br-*`, `lo`) and container/system
+mounts are excluded automatically.
+
+---
+
+## Troubleshooting
+
+**Add-on fails to start with "Basic Auth is required"**
+→ Make sure `enable_basic_auth: true` in the configuration.
+
+**Add-on fails to start with "not a valid bcrypt hash"**
+→ The hash must start with `$2a$`, `$2b$`, or `$2y$`. Re-run the
+`htpasswd` command and copy the full output.
+
+**`curl` returns 401 even with credentials**
+→ Check that the username in the curl command matches `basic_auth_user`
+exactly, and that the password is the plaintext password (not the hash).
+
+**Metrics show only container filesystem, not HAOS storage**
+→ The filesystem collector relies on `host_pid: true` and the default
+mount exclusions. If you see only a small overlay filesystem, check that the
+add-on is actually running in non-protected mode (visible in the Info tab).

@@ -44,6 +44,44 @@ Basic Auth for access control.
 Do not expose port `9100/tcp` through Caddy, WAN port forwarding, or any
 public reverse proxy.
 
+### Firewall rules (generic examples)
+
+These examples assume:
+- `<HA_IP>` is the Home Assistant host address.
+- `<PROMETHEUS_IP>` is the Prometheus scraper host address (on the trusted LAN).
+- `<IOT_SUBNET>` and `<GUEST_SUBNET>` are the network segments to block.
+
+**iptables / nftables (Linux router or firewall host)**
+
+```bash
+# Allow Prometheus scraper
+iptables -A FORWARD -s <PROMETHEUS_IP> -d <HA_IP> -p tcp --dport 9100 -j ACCEPT
+
+# Block IoT and guest segments
+iptables -A FORWARD -s <IOT_SUBNET> -d <HA_IP> -p tcp --dport 9100 -j DROP
+iptables -A FORWARD -s <GUEST_SUBNET> -d <HA_IP> -p tcp --dport 9100 -j DROP
+```
+
+**EdgeOS / VyOS (EdgeRouter-style CLI)**
+
+```
+firewall {
+    name IOT_TO_LAN {
+        rule 10 {
+            action drop
+            destination {
+                address <HA_IP>
+                port 9100
+            }
+            protocol tcp
+        }
+    }
+}
+```
+
+Apply the ruleset on the IoT and guest interfaces toward the LAN. Adapt rule
+numbers and interface names to your environment.
+
 ## Reporting a vulnerability
 
 Open a private issue or contact the maintainer directly via GitHub.
