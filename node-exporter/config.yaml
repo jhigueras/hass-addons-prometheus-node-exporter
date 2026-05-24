@@ -1,6 +1,6 @@
 ---
 name: Hardened Node Exporter
-version: 2026.1.4
+version: 2026.1.5
 slug: hardened-node-exporter
 description: >-
   Exposes HAOS host health metrics for Prometheus. Hardened fork of the RACKSYNC
@@ -50,6 +50,7 @@ options:
     time: true
     wifi: false
     hwmon: true
+    boottime: true
 schema:
   enable_basic_auth: bool
   basic_auth_user: str
@@ -69,3 +70,4 @@ schema:
     time: bool?
     wifi: bool?
     hwmon: bool?
+    boottime: bool?

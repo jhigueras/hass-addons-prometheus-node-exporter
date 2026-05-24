@@ -1,5 +1,14 @@
 ### CHANGELOG
 
+## 2026.1.5
+
+### Added
+
+- `boottime` collector (opt-in, default enabled): exposes `node_boot_time_seconds`
+  for Uptime panels in Grafana/Prometheus dashboards.
+
+---
+
 ## 2026.1.4
 
 ### Changed
