@@ -42,6 +42,7 @@ Before committing, check whether changes affect existing docs:
 - Does it change behavior described in `README.md` or `node-exporter/README.md`?
 - Does it change security posture described in `SECURITY.md`?
 - Does it add or remove config options (schema in `config.yaml`)?
+- Does it bump the version? → add an entry to `node-exporter/CHANGELOG.md`.
 
 If yes → update affected docs in the same commit.
 
