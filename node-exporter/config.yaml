@@ -1,6 +1,6 @@
 ---
 name: Hardened Node Exporter
-version: 2026.1.3
+version: 2026.1.4
 slug: hardened-node-exporter
 description: >-
   Exposes HAOS host health metrics for Prometheus. Hardened fork of the RACKSYNC

@@ -14,7 +14,7 @@ This add-on requires `host_pid: true` and `host_network: true`. It runs in
 
 - Home Assistant OS on amd64, aarch64, or armv7
 - A Prometheus scraper with Basic Auth support on the same LAN
-- IoT and guest VLANs blocked from port `9100/tcp` at the router
+- Untrusted network segments blocked from port `9100/tcp` at the router
 
 ## Installation
 

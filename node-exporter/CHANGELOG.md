@@ -1,5 +1,15 @@
 ### CHANGELOG
 
+## 2026.1.4
+
+### Changed
+
+- Generalized network-segment language in all user-facing docs: replaced
+  specific "IoT and guest VLAN" references with "untrusted network segments"
+  so the guidance applies to any network topology.
+
+---
+
 ## 2026.1.3
 
 ### Fixed

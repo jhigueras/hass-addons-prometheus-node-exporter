@@ -28,7 +28,7 @@ This add-on requires `host_pid: true` and `host_network: true` — it runs in
 Key controls in this fork: Basic Auth mandatory, bcrypt-only hashes, no HA API
 access, no SUPERVISOR_TOKEN on disk, SHA256 binary verification.
 
-Required operator controls: firewall blocking port `9100/tcp` from IoT/guest VLANs;
+Required operator controls: firewall blocking port `9100/tcp` from untrusted network segments;
 do not expose through a reverse proxy or WAN.
 
 ## Installation

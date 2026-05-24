@@ -14,8 +14,8 @@ sensors) on port `9100/tcp` for scraping by Prometheus.
 You need:
 
 1. A Prometheus instance on your LAN that will scrape this add-on.
-2. Your router or firewall configured to block port `9100/tcp` from IoT and
-   guest network segments. The add-on cannot enforce this on its own.
+2. Your router or firewall configured to block port `9100/tcp` from any
+   untrusted network segments. The add-on cannot enforce this on its own.
 3. A bcrypt hash of a scrape password (instructions below).
 
 ---

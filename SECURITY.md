@@ -37,8 +37,8 @@ The following controls reduce but do not eliminate the risk:
 ## Network controls required from the operator
 
 This add-on cannot enforce network-level isolation on its own. The operator
-must configure the router or firewall to block port `9100/tcp` from IoT and
-guest VLANs. Same-LAN clients are not blocked by the router and rely on
+must configure the router or firewall to block port `9100/tcp` from any
+untrusted network segments. Same-LAN clients are not blocked by the router and rely on
 Basic Auth for access control.
 
 Do not expose port `9100/tcp` through Caddy, WAN port forwarding, or any
@@ -49,7 +49,7 @@ public reverse proxy.
 These examples assume:
 - `<HA_IP>` is the Home Assistant host address.
 - `<PROMETHEUS_IP>` is the Prometheus scraper host address (on the trusted LAN).
-- `<IOT_SUBNET>` and `<GUEST_SUBNET>` are the network segments to block.
+- `<UNTRUSTED_SUBNET>` is a network segment to block (repeat the rule for each untrusted segment).
 
 **iptables / nftables (Linux router or firewall host)**
 
@@ -57,16 +57,15 @@ These examples assume:
 # Allow Prometheus scraper
 iptables -A FORWARD -s <PROMETHEUS_IP> -d <HA_IP> -p tcp --dport 9100 -j ACCEPT
 
-# Block IoT and guest segments
-iptables -A FORWARD -s <IOT_SUBNET> -d <HA_IP> -p tcp --dport 9100 -j DROP
-iptables -A FORWARD -s <GUEST_SUBNET> -d <HA_IP> -p tcp --dport 9100 -j DROP
+# Block untrusted segments (add one rule per segment)
+iptables -A FORWARD -s <UNTRUSTED_SUBNET> -d <HA_IP> -p tcp --dport 9100 -j DROP
 ```
 
 **EdgeOS / VyOS (EdgeRouter-style CLI)**
 
 ```
 firewall {
-    name IOT_TO_LAN {
+    name UNTRUSTED_TO_LAN {
         rule 10 {
             action drop
             destination {
@@ -79,7 +78,7 @@ firewall {
 }
 ```
 
-Apply the ruleset on the IoT and guest interfaces toward the LAN. Adapt rule
+Apply the ruleset on untrusted interfaces toward the LAN. Adapt rule
 numbers and interface names to your environment.
 
 ## Reporting a vulnerability
