@@ -35,6 +35,7 @@ fi
 # WEB_CONFIG_FILE can be overridden in tests; when set, permission hardening is skipped
 # because tests run as an unprivileged user without the prometheus group.
 web_config_file="${WEB_CONFIG_FILE:-/addon_config/node_exporter_web.yml}"
+mkdir -p "$(dirname "${web_config_file}")"
 rm -f "${web_config_file}"
 if [[ -z "${WEB_CONFIG_FILE:-}" ]]; then
     install -m 640 /dev/null "${web_config_file}" \

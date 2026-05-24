@@ -1,5 +1,15 @@
 ### CHANGELOG
 
+## 2026.1.3
+
+### Fixed
+
+- Add-on failed to start: `install` could not create web config because `/addon_config`
+  directory did not exist inside the container. Added `mkdir -p` on the parent path
+  before writing.
+
+---
+
 ## 2026.1.2
 
 ### Changed
