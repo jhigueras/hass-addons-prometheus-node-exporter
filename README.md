@@ -84,6 +84,7 @@ do not expose through a reverse proxy or WAN.
 | netdev | ✅ | `node_network_*` |
 | netstat | ✅ | `node_netstat_*` |
 | hwmon | ✅ | `node_hwmon_temp_celsius` |
+| boottime | ✅ | `node_boot_time_seconds` |
 | wifi | ❌ | disabled |
 
 Virtual interfaces (`veth*`, `docker*`, `br-*`, `lo`) and container/system mounts
